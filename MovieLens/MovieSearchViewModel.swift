@@ -16,8 +16,13 @@ final class MovieSearchViewModel: ObservableObject {
     @Published private(set) var page: Int = 1
     @Published private(set) var totalPages: Int = 1
 
+    @Published private(set) var isPaging: Bool = false
+    @Published private(set) var pagingError: String?
+
     private let repository: MovieRepositoryProtocol
-    private var currentTask: Task<Void, Never>?
+    private var debounceTask: Task<Void, Never>?
+    private var pagingTask: Task<Void, Never>?
+    private var isRequestInFlight = false
 
     init(repository: MovieRepositoryProtocol = MovieRepository()) {
         self.repository = repository
@@ -26,9 +31,11 @@ final class MovieSearchViewModel: ObservableObject {
     func updateQuery(_ newQuery: String) {
         guard newQuery != query else { return }
         query = newQuery
-        // Debounce-like behavior: cancel previous task and start a new one after a short delay
-        currentTask?.cancel()
-        currentTask = Task { [weak self] in
+
+        debounceTask?.cancel()
+        pagingTask?.cancel()
+
+        debounceTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: 350_000_000)
             guard let self else { return }
             await self.search(reset: true)
@@ -36,45 +43,75 @@ final class MovieSearchViewModel: ObservableObject {
     }
 
     func search(reset: Bool) async {
-        guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
             movies = []
             page = 1
             totalPages = 1
             state = .idle
+            isPaging = false
+            pagingError = nil
             return
         }
+
+        guard !isRequestInFlight else { return }
+        isRequestInFlight = true
 
         if reset {
             page = 1
             totalPages = 1
             movies = []
+            state = .loading
+            isPaging = false
+            pagingError = nil
+        } else {
+            isPaging = true
+            pagingError = nil
         }
 
-        state = .loading
+        defer {
+            isRequestInFlight = false
+        }
+
         do {
-            let response = try await repository.search(query: query, page: page)
+            let response = try await repository.search(query: trimmed, page: page)
             if reset {
                 movies = response.results
             } else {
                 movies.append(contentsOf: response.results)
             }
             totalPages = response.totalPages
-            state = .loaded
+
+            if reset {
+                state = .loaded
+            }
+            isPaging = false
         } catch {
-            state = .error((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+            if reset {
+                state = .error((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+            } else {
+                pagingError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                isPaging = false
+            }
         }
     }
 
     func loadNextPageIfNeeded(currentItem: Movie?) async {
+        guard let currentItem else { return }
         guard state != .loading,
-              page < totalPages,
-              let currentItem,
-              let thresholdIndex = movies.index(movies.endIndex, offsetBy: -5, limitedBy: movies.startIndex),
-              movies.indices.contains(thresholdIndex),
-              movies[thresholdIndex].id == currentItem.id else {
-            return
+              !isPaging,
+              !isRequestInFlight,
+              page < totalPages else { return }
+
+        let threshold = 5
+        if let index = movies.firstIndex(where: { $0.id == currentItem.id }),
+           index >= movies.count - threshold {
+            page += 1
+
+            pagingTask?.cancel()
+            pagingTask = Task { [weak self] in
+                await self?.search(reset: false)
+            }
         }
-        page += 1
-        await search(reset: false)
     }
 }
