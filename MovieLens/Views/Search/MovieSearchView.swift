@@ -1,8 +1,12 @@
 import SwiftUI
 
 struct MovieSearchView: View {
-    @StateObject private var viewModel = MovieSearchViewModel(repository: MovieRepository())
+    @StateObject private var viewModel: MovieSearchViewModel
     @EnvironmentObject private var favorites: FavoritesStore
+
+    init(viewModel: MovieSearchViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
 
     var body: some View {
         NavigationStack {

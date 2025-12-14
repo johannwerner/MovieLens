@@ -5,7 +5,7 @@ struct MovieDetailView: View {
     @State private var movie: Movie?
     @State private var isLoading = true
     @State private var errorMessage: String?
-    private let repository = MovieRepository()
+    @Environment(\.movieRepository) private var repository
     @EnvironmentObject private var favorites: FavoritesStore
 
     var body: some View {

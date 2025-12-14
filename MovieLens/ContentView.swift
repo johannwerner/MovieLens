@@ -1,14 +1,17 @@
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(\.movieRepository) private var repository
     @StateObject private var favorites = FavoritesStore()
 
     var body: some View {
         TabView {
-            MovieSearchView()
-                .tabItem {
-                    Label("Search", systemImage: "magnifyingglass")
-                }
+            MovieSearchView(
+                viewModel: MovieSearchViewModel(repository: repository)
+            )
+            .tabItem {
+                Label("Search", systemImage: "magnifyingglass")
+            }
 
             FavoritesView()
                 .tabItem {

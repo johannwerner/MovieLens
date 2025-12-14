@@ -2,10 +2,10 @@ import SwiftUI
 
 struct FavoritesView: View {
     @EnvironmentObject private var favorites: FavoritesStore
+    @Environment(\.movieRepository) private var repository
     @State private var movies: [Movie] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
-    private let repository = MovieRepository()
 
     var body: some View {
         NavigationStack {
