@@ -22,7 +22,7 @@ Note: Never commit real API keys/tokens to version control.
 - Ensure requests to TMDB endpoints succeed (e.g., popular movies list loads without authentication errors).
 - If you see authentication or 401 errors, double-check that:
   - You pasted the correct values.
-  - The token and key are placed in the exact expected keys.
+  - The token is placed in the exact expected keys.
   - Your account has an active, approved API key.
 
 For any issues, revisit the TMDB documentation: https://www.themoviedb.org/documentation/api
