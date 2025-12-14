@@ -80,12 +80,21 @@ final class MovieRepository: MovieRepositoryProtocol {
 
     private func saveToDisk(_ response: SearchResponse, forKey key: String) {
         let url = fileURL(forKey: key)
-        ioQueue.async {
+        Task { [encoder, ioQueue] in
+            let data: Data
             do {
-                let data = try self.encoder.encode(response)
-                try data.write(to: url, options: [.atomic])
+                data = try await MainActor.run {
+                    try encoder.encode(response)
+                }
             } catch {
+                return
+            }
 
+            ioQueue.async {
+                do {
+                    try data.write(to: url, options: [.atomic])
+                } catch {
+                }
             }
         }
     }
@@ -93,11 +102,11 @@ final class MovieRepository: MovieRepositoryProtocol {
     private func loadFromDisk(forKey key: String) -> SearchResponse? {
         let url = fileURL(forKey: key)
         var result: SearchResponse?
-        ioQueue.sync {
+        ioQueue.sync { [decoder] in
             guard FileManager.default.fileExists(atPath: url.path) else { return }
             do {
                 let data = try Data(contentsOf: url)
-                result = try self.decoder.decode(SearchResponse.self, from: data)
+                result = try decoder.decode(SearchResponse.self, from: data)
             } catch {
                 try? FileManager.default.removeItem(at: url)
             }
