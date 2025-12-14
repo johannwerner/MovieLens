@@ -26,7 +26,7 @@ final class MovieSearchViewModel: ObservableObject {
 
     private var currentRequestID: Int = 0
 
-    init(repository: MovieRepositoryProtocol = MovieRepository()) {
+    init(repository: MovieRepositoryProtocol) {
         self.repository = repository
     }
 

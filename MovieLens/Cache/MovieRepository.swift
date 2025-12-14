@@ -47,7 +47,7 @@ final class MovieRepository: MovieRepositoryProtocol {
         }
 
         do {
-            let response = try await client.send(.searchMovies(query: query, page: page), as: SearchResponse.self)
+            let response: SearchResponse = try await client.send(.searchMovies(query: query, page: page))
             memoryCache.setObject(CacheBox(response), forKey: key)
             saveToDisk(response, forKey: keyString)
             return response
@@ -63,7 +63,7 @@ final class MovieRepository: MovieRepositoryProtocol {
     }
 
     func details(id: Int) async throws -> Movie {
-        try await client.send(.movieDetails(id: id), as: Movie.self)
+        try await client.send(.movieDetails(id: id))
     }
 
     private func cacheKey(query: String, page: Int) -> String {

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct MovieSearchView: View {
-    @StateObject private var viewModel = MovieSearchViewModel()
+    @StateObject private var viewModel = MovieSearchViewModel(repository: MovieRepository())
     @EnvironmentObject private var favorites: FavoritesStore
 
     var body: some View {
