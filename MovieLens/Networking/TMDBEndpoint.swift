@@ -45,3 +45,5 @@ enum TMDBEndpoint {
         return request
     }
 }
+
+extension TMDBEndpoint: EndpointProtocol {}

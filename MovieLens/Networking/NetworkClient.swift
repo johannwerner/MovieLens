@@ -1,7 +1,11 @@
 import Foundation
 
+protocol EndpointProtocol {
+    func makeURLRequest() throws -> URLRequest
+}
+
 protocol NetworkClientProtocol {
-    func send<T: Decodable>(_ endpoint: TMDBEndpoint) async throws -> T
+    func send<T: Decodable>(_ endpoint: EndpointProtocol) async throws -> T
 }
 
 final class NetworkClient: NetworkClientProtocol {
@@ -15,7 +19,7 @@ final class NetworkClient: NetworkClientProtocol {
         self.decoder = decoder
     }
 
-    func send<T: Decodable>(_ endpoint: TMDBEndpoint) async throws -> T {
+    func send<T: Decodable>(_ endpoint: EndpointProtocol) async throws -> T {
         let request = try endpoint.makeURLRequest()
         do {
             let (data, response) = try await session.data(for: request)
