@@ -9,7 +9,6 @@ struct Movie: Identifiable, Codable, Equatable {
     let backdropPath: String?
     let voteAverage: Double?
 
-    // Convenience formatting
     var yearText: String {
         guard let releaseDate, let year = releaseDate.split(separator: "-").first else { return "—" }
         return String(year)

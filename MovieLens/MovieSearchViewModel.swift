@@ -22,7 +22,9 @@ final class MovieSearchViewModel: ObservableObject {
     private let repository: MovieRepositoryProtocol
     private var debounceTask: Task<Void, Never>?
     private var pagingTask: Task<Void, Never>?
-    private var isRequestInFlight = false
+    private var searchTask: Task<Void, Never>?
+
+    private var currentRequestID: Int = 0
 
     init(repository: MovieRepositoryProtocol = MovieRepository()) {
         self.repository = repository
@@ -34,6 +36,7 @@ final class MovieSearchViewModel: ObservableObject {
 
         debounceTask?.cancel()
         pagingTask?.cancel()
+        searchTask?.cancel()
 
         debounceTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: 350_000_000)
@@ -45,53 +48,73 @@ final class MovieSearchViewModel: ObservableObject {
     func search(reset: Bool) async {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
+
             movies = []
             page = 1
             totalPages = 1
             state = .idle
             isPaging = false
             pagingError = nil
+
+            currentRequestID &+= 1
+            searchTask?.cancel()
+            pagingTask?.cancel()
             return
         }
 
-        guard !isRequestInFlight else { return }
-        isRequestInFlight = true
-
         if reset {
-            page = 1
-            totalPages = 1
-            movies = []
+            currentRequestID &+= 1
+            let requestID = currentRequestID
+
+            searchTask?.cancel()
+            pagingTask?.cancel()
+
             state = .loading
             isPaging = false
             pagingError = nil
+            page = 1
+            totalPages = 1
+            movies = []
+
+            searchTask = Task { [weak self] in
+                guard let self else { return }
+                do {
+                    let response = try await self.repository.search(query: trimmed, page: 1)
+                    guard requestID == self.currentRequestID else { return }
+                    self.movies = response.results
+                    self.totalPages = response.totalPages
+                    self.state = .loaded
+                } catch is CancellationError {
+
+                } catch {
+                    guard requestID == self.currentRequestID else { return }
+                    self.state = .error((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+                }
+            }
         } else {
+            guard !isPaging, page < totalPages else { return }
             isPaging = true
             pagingError = nil
-        }
+            let pagingRequestID = currentRequestID
+            let nextPage = page
 
-        defer {
-            isRequestInFlight = false
-        }
-
-        do {
-            let response = try await repository.search(query: trimmed, page: page)
-            if reset {
-                movies = response.results
-            } else {
-                movies.append(contentsOf: response.results)
-            }
-            totalPages = response.totalPages
-
-            if reset {
-                state = .loaded
-            }
-            isPaging = false
-        } catch {
-            if reset {
-                state = .error((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
-            } else {
-                pagingError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-                isPaging = false
+            pagingTask?.cancel()
+            pagingTask = Task { [weak self] in
+                guard let self else { return }
+                do {
+                    let response = try await self.repository.search(query: trimmed, page: nextPage)
+                    guard pagingRequestID == self.currentRequestID else { return }
+                    self.movies.append(contentsOf: response.results)
+                    self.totalPages = response.totalPages
+                    self.isPaging = false
+                } catch is CancellationError {
+                    guard pagingRequestID == self.currentRequestID else { return }
+                    self.isPaging = false
+                } catch {
+                    guard pagingRequestID == self.currentRequestID else { return }
+                    self.pagingError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                    self.isPaging = false
+                }
             }
         }
     }
@@ -100,7 +123,6 @@ final class MovieSearchViewModel: ObservableObject {
         guard let currentItem else { return }
         guard state != .loading,
               !isPaging,
-              !isRequestInFlight,
               page < totalPages else { return }
 
         let threshold = 5
