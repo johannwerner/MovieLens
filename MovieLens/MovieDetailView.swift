@@ -6,6 +6,7 @@ struct MovieDetailView: View {
     @State private var isLoading = true
     @State private var errorMessage: String?
     private let repository = MovieRepository()
+    @EnvironmentObject private var favorites: FavoritesStore
 
     var body: some View {
         Group {
@@ -67,6 +68,18 @@ struct MovieDetailView: View {
                 }
                 .navigationTitle(movie.title)
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        let isFav = favorites.isFavorite(id: movie.id)
+                        Button {
+                            favorites.toggle(id: movie.id)
+                        } label: {
+                            Image(systemName: isFav ? "heart.fill" : "heart")
+                                .foregroundStyle(isFav ? .red : .primary)
+                                .accessibilityLabel(isFav ? "Remove from favorites" : "Add to favorites")
+                        }
+                    }
+                }
             } else if let errorMessage {
                 VStack(spacing: 12) {
                     Text("Error").font(.headline)

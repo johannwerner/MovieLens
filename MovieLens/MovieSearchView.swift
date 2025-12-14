@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MovieSearchView: View {
     @StateObject private var viewModel = MovieSearchViewModel()
+    @EnvironmentObject private var favorites: FavoritesStore
 
     var body: some View {
         NavigationStack {
@@ -52,11 +53,16 @@ struct MovieSearchView: View {
             ForEach(viewModel.movies) { movie in
                 NavigationLink {
                     MovieDetailView(movieID: movie.id)
+                        .environmentObject(favorites)
                 } label: {
-                    MovieRow(movie: movie)
-                        .task {
-                            await viewModel.loadNextPageIfNeeded(currentItem: movie)
-                        }
+                    MovieRow(
+                        movie: movie,
+                        isFavorite: favorites.isFavorite(id: movie.id),
+                        onToggleFavorite: { favorites.toggle(id: movie.id) }
+                    )
+                    .task {
+                        await viewModel.loadNextPageIfNeeded(currentItem: movie)
+                    }
                 }
             }
         }
@@ -77,6 +83,8 @@ struct MovieSearchView: View {
 
 private struct MovieRow: View {
     let movie: Movie
+    let isFavorite: Bool
+    let onToggleFavorite: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
@@ -104,9 +112,18 @@ private struct MovieRow: View {
             .clipShape(RoundedRectangle(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 6) {
-                Text(movie.title)
-                    .font(.headline)
-                    .lineLimit(2)
+                HStack {
+                    Text(movie.title)
+                        .font(.headline)
+                        .lineLimit(2)
+                    Spacer()
+                    Button(action: onToggleFavorite) {
+                        Image(systemName: isFavorite ? "heart.fill" : "heart")
+                            .foregroundStyle(isFavorite ? .red : .secondary)
+                            .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
+                    }
+                    .buttonStyle(.plain)
+                }
                 Text(movie.yearText)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
