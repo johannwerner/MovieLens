@@ -46,8 +46,8 @@ struct FavoritesView: View {
             }
             .navigationTitle("Favorites")
         }
-        .onAppear { Task { await loadFavorites() } }
-        .onChange(of: favorites.favoriteIDs) { _ in
+        .task { await loadFavorites() }
+        .onChange(of: favorites.favoriteIDs) {
             Task { await loadFavorites() }
         }
     }
