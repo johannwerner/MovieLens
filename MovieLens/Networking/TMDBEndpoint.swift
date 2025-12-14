@@ -25,7 +25,6 @@ enum TMDBEndpoint {
             return [
                 URLQueryItem(name: "query", value: query),
                 URLQueryItem(name: "page", value: String(page)),
-                URLQueryItem(name: "include_adult", value: "false"),
                 URLQueryItem(name: "language", value: "en-US")
             ]
         case .movieDetails:
