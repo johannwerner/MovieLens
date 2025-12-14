@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(\.movieRepository) private var repository
-    @StateObject private var favorites = FavoritesStore()
 
     var body: some View {
         TabView {
@@ -18,10 +17,11 @@ struct ContentView: View {
                     Label("Favorites", systemImage: "heart")
                 }
         }
-        .environmentObject(favorites)
     }
 }
 
 #Preview {
     ContentView()
+        .environmentObject(FavoritesStore(storage: UserDefaultsFavoritesStorage()))
+        .environment(\.movieRepository, MovieRepository())
 }
