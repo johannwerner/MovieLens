@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		B98CD7D92EEEAFAC003A0E90 /* readme.md in Resources */ = {isa = PBXBuildFile; fileRef = B98CD7D82EEEAFAC003A0E90 /* readme.md */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		B9CBC5592EEC378400F9248F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,6 +28,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B98CD7D82EEEAFAC003A0E90 /* readme.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = readme.md; sourceTree = "<group>"; };
 		B9CBC54B2EEC378200F9248F /* MovieLens.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MovieLens.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B9CBC5582EEC378400F9248F /* MovieLensTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MovieLensTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B9CBC5622EEC378400F9248F /* MovieLensUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MovieLensUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -75,6 +80,7 @@
 		B9CBC5422EEC378100F9248F = {
 			isa = PBXGroup;
 			children = (
+				B98CD7D82EEEAFAC003A0E90 /* readme.md */,
 				B9CBC54D2EEC378200F9248F /* MovieLens */,
 				B9CBC55B2EEC378400F9248F /* MovieLensTests */,
 				B9CBC5652EEC378400F9248F /* MovieLensUITests */,
@@ -212,6 +218,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B98CD7D92EEEAFAC003A0E90 /* readme.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
