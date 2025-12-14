@@ -84,9 +84,10 @@ final class MovieSearchViewModel: ObservableObject {
                     self.movies = response.results
                     self.totalPages = response.totalPages
                     self.state = .loaded
-                } catch is CancellationError {
-
-                } catch {
+                }  catch {
+                    if case APIError.cancelled = error {
+                        return
+                    }
                     guard requestID == self.currentRequestID else { return }
                     self.state = .error((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
                 }
@@ -107,10 +108,12 @@ final class MovieSearchViewModel: ObservableObject {
                     self.movies.append(contentsOf: response.results)
                     self.totalPages = response.totalPages
                     self.isPaging = false
-                } catch is CancellationError {
-                    guard pagingRequestID == self.currentRequestID else { return }
-                    self.isPaging = false
                 } catch {
+                    if case APIError.cancelled = error {
+                        guard pagingRequestID == self.currentRequestID else { return }
+                        self.isPaging = false
+                        return
+                    }
                     guard pagingRequestID == self.currentRequestID else { return }
                     self.pagingError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
                     self.isPaging = false
