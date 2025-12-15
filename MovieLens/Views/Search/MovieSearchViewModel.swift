@@ -39,7 +39,11 @@ final class MovieSearchViewModel: ObservableObject {
         searchTask?.cancel()
 
         debounceTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 350_000_000)
+            do {
+                try await Task.sleep(nanoseconds: 500_000_000)
+            } catch {
+                return
+            }
             guard let self else { return }
             await self.search(reset: true)
         }
