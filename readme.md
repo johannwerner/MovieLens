@@ -6,7 +6,7 @@ This app shows movie data using The Movie Database (TMDB). Follow the steps belo
 
 - A Mac running macOS
 - Xcode (Apple’s free developer app)
-- A free TMDB account and token
+- A free TMDB account and token (instructions below)
 
 ---
 
